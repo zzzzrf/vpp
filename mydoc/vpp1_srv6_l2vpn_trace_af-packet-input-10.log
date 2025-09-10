@@ -1,0 +1,547 @@
+
+DBGvpp# show interface addr
+host-vpp1out (up):
+  L2 bridge bd-id 1 idx 1 shg 0  
+  L3 10.10.1.11/24
+host-vpp1vpp2 (up):
+  L3 2001::1/64
+local0 (dn):
+DBGvpp# 
+
+DBGvpp# show bridge-domain 1 detail 
+  BD-ID   Index   BSN  Age(min)  Learning  U-Forwrd   UU-Flood   Flooding  ARP-Term  arp-ufwd Learn-co Learn-li   BVI-Intf 
+    1       1      0     off        on        on       flood        on       off       off        1    16777216     N/A    
+span-l2-input l2-input-classify l2-input-feat-arc l2-policer-classify l2-input-acl vpath-input-l2 l2-ip-qos-record l2-input-vtr l2-learn l2-rw l2-fwd l2-flood l2-flood l2-output 
+
+           Interface           If-idx ISN  SHG  BVI  TxFlood        VLAN-Tag-Rewrite       
+         host-vpp1out            1     3    0    -      *                 none             
+
+DBGvpp# show sr encaps source addr
+SR encaps source addr = 2001:db8:1:1::
+
+
+DBGvpp# show sr policies 
+SR policies:
+[0].-   BSID: 2001:db8:1:1::1
+        Behavior: Encapsulation
+        EncapSrcIP: 2001:db8:1:1::
+        Type: Default
+        FIB table: 0
+        Segment Lists:
+        [0].- < 2001:db8:2:2:2:: > weight: 1
+-----------
+
+DBGvpp# show sr steering-policies 
+SR steering policies:
+Traffic         SR policy BSID
+L2 host-vpp1out 2001:db8:1:1::1
+
+DBGvpp# show node af-packet-input
+node af-packet-input, type input, state interrupt wait, index 319, sibling-of device-input
+  node function variants:
+    Name             Priority  Active  Description
+    default                 0          default
+    icl                    -1          Intel Ice Lake
+    skx                    -1          Intel Skylake (server) / Cascade Lake
+    hsw                    50    yes   Intel Haswell
+
+  next nodes:
+    next-index  node-index               Node               Vectors
+         0          643          ip4-input-no-checksum         0   
+         1          644                ip4-input               0   
+         2          600                ip6-input               0   
+         3          466               mpls-input               0   
+         4          701             ethernet-input           2770  
+         5          714               error-drop               0   
+         6          647                ip4-drop                0   
+         7          607                ip6-drop                0   
+         8          725              punt-dispatch             0   
+         9          518            esp4-decrypt-tun            0   
+        10          516            esp6-decrypt-tun            0   
+        11          458         sr-pl-rewrite-encaps-l2       650  
+
+
+DBGvpp# show trace
+------------------- Start of thread 0 vpp_main -------------------
+Packet 1
+
+01:05:17:640056: af-packet-input
+  af_packet: hw_if_index 1 rx-queue 0 next-index 11
+    block 42:
+      address 0x7f68d7ea0000 version 2 seq_num 2123 pkt_num 0
+    tpacket3_hdr:
+      status 0x20000001 len 42 snaplen 42 mac 92 net 106
+      sec 0x6890717d nsec 0x2c7ddb31 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+01:05:17:647993: sr-pl-rewrite-encaps-l2
+  SR-policy-rewrite: src 2001:db8:1:1:: dst 2001:db8:2:2:2::
+01:05:17:648020: ip6-lookup
+  fib 0 dpo-idx 14 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0xb0cd, hop limit 64, payload length 42
+01:05:17:648039: ip6-load-balance
+  fib 0 dpo-idx 3 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0xb0cd, hop limit 64, payload length 42
+01:05:17:648050: ip6-rewrite
+  tx_sw_if_index 2 adj-idx 3 : ipv6 via 2001::2 host-vpp1vpp2: mtu:9000 next:4 flags:[] 02fe73c6b2ee02fe156e52ad86dd flow hash: 0x00000000
+  00000000: 02fe73c6b2ee02fe156e52ad86dd6000b0cd002a8f3f20010db8000100010000
+  00000020: 00000000000020010db8000200020002000000000000ffffffffffff5a80c1ad
+  00000040: 964e080600010800060400015a80c1ad964e0a0a01010000000000000a0a0102
+  00000060: 0001000100010000000000005a80c1ad964e62d801e9d20808060001
+01:05:17:648063: host-vpp1vpp2-output
+  host-vpp1vpp2 flags 0x00000005
+  IP6: 02:fe:15:6e:52:ad -> 02:fe:73:c6:b2:ee
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0xb0cd, hop limit 63, payload length 42
+01:05:17:648075: host-vpp1vpp2-tx
+  af_packet: hw_if_index 2 tx-queue 0
+    tpacket3_hdr:
+      status 0x1 len 106 snaplen 106 mac 0 net 0
+      sec 0x0 nsec 0x0 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+    buffer 0x94064:
+      current data -54, length 96, buffer-pool 0, ref-count 1, trace handle 0x0
+    IP6: 02:fe:15:6e:52:ad -> 02:fe:73:c6:b2:ee
+    IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+      tos 0x00, flow label 0xb0cd, hop limit 63, payload length 42
+
+Packet 2
+
+01:05:17:671290: af-packet-input
+  af_packet: hw_if_index 2 rx-queue 0 next-index 4
+    block 99:
+      address 0x7f68d3630000 version 2 seq_num 1220 pkt_num 0
+    tpacket3_hdr:
+      status 0x20000001 len 96 snaplen 96 mac 92 net 106
+      sec 0x6890717d nsec 0x2e072ed6 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+01:05:17:676041: ethernet-input
+  IP6: 02:fe:73:c6:b2:ee -> 02:fe:15:6e:52:ad
+01:05:17:676082: ip6-input
+  IP6_ETHERNET: 2001:db8:2:2:: -> 2001:db8:1:1:1::
+    tos 0x00, flow label 0x6d40, hop limit 63, payload length 42
+01:05:17:676094: ip6-lookup
+  fib 0 dpo-idx 0 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:2:2:: -> 2001:db8:1:1:1::
+    tos 0x00, flow label 0x6d40, hop limit 63, payload length 42
+01:05:17:676112: sr-localsid-d
+  SR-LOCALSID:
+        Localsid: 2001:db8:1:1:1::
+        Behavior: Decapsulation with L2 xconnect
+
+01:05:17:676130: host-vpp1out-output
+  host-vpp1out flags 0x00180005
+  ARP: 62:d8:01:e9:d2:08 -> 5a:80:c1:ad:96:4e
+  reply, type ethernet/IP4, address size 6/4
+  62:d8:01:e9:d2:08/10.10.1.2 -> 5a:80:c1:ad:96:4e/10.10.1.1
+01:05:17:676140: host-vpp1out-tx
+  af_packet: hw_if_index 1 tx-queue 0
+    tpacket3_hdr:
+      status 0x1 len 52 snaplen 52 mac 0 net 0
+      sec 0x0 nsec 0x0 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+    buffer 0x94089:
+      current data 54, length 42, buffer-pool 0, ref-count 1, trace handle 0x1
+      l2-hdr-offset 0 l3-hdr-offset 14 
+    ARP: 62:d8:01:e9:d2:08 -> 5a:80:c1:ad:96:4e
+    reply, type ethernet/IP4, address size 6/4
+    62:d8:01:e9:d2:08/10.10.1.2 -> 5a:80:c1:ad:96:4e/10.10.1.1
+
+Packet 3
+
+01:05:17:676337: af-packet-input
+  af_packet: hw_if_index 1 rx-queue 0 next-index 11
+    block 43:
+      address 0x7f68d7eb0000 version 2 seq_num 2124 pkt_num 0
+    tpacket3_hdr:
+      status 0x20000001 len 98 snaplen 98 mac 92 net 106
+      sec 0x6890717d nsec 0x2e822b52 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+01:05:17:680057: sr-pl-rewrite-encaps-l2
+  SR-policy-rewrite: src 2001:db8:1:1:: dst 2001:db8:2:2:2::
+01:05:17:680079: ip6-lookup
+  fib 0 dpo-idx 14 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0xd2e6, hop limit 64, payload length 98
+01:05:17:680097: ip6-load-balance
+  fib 0 dpo-idx 3 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0xd2e6, hop limit 64, payload length 98
+01:05:17:680106: ip6-rewrite
+  tx_sw_if_index 2 adj-idx 3 : ipv6 via 2001::2 host-vpp1vpp2: mtu:9000 next:4 flags:[] 02fe73c
+6b2ee02fe156e52ad86dd flow hash: 0x00000000
+  00000000: 02fe73c6b2ee02fe156e52ad86dd6000d2e600628f3f20010db8000100010000
+  00000020: 00000000000020010db800020002000200000000000062d801e9d2085a80c1ad
+  00000040: 964e080045000054cd9b4000400156f70a0a01010a0a0102080091ca00240001
+  00000060: 7d719068000000008e630b0000000000101112131415161718191a1b
+01:05:17:680117: host-vpp1vpp2-output
+  host-vpp1vpp2 flags 0x00000005
+  IP6: 02:fe:15:6e:52:ad -> 02:fe:73:c6:b2:ee
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0xd2e6, hop limit 63, payload length 98
+01:05:17:680127: host-vpp1vpp2-tx
+  af_packet: hw_if_index 2 tx-queue 0
+    tpacket3_hdr:
+      status 0x1 len 162 snaplen 162 mac 0 net 0
+      sec 0x0 nsec 0x0 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+    buffer 0x940ae:
+      current data -54, length 152, buffer-pool 0, ref-count 1, trace handle 0x2
+    IP6: 02:fe:15:6e:52:ad -> 02:fe:73:c6:b2:ee
+    IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+      tos 0x00, flow label 0xd2e6, hop limit 63, payload length 98
+
+Packet 4
+
+01:05:17:691264: af-packet-input
+  af_packet: hw_if_index 2 rx-queue 0 next-index 4
+    block 100:
+      address 0x7f68d3640000 version 2 seq_num 1221 pkt_num 0
+    tpacket3_hdr:
+      status 0x20000001 len 152 snaplen 152 mac 92 net 106
+      sec 0x6890717d nsec 0x2f754ecf vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+01:05:17:700028: ethernet-input
+  IP6: 02:fe:73:c6:b2:ee -> 02:fe:15:6e:52:ad
+01:05:17:700056: ip6-input
+  IP6_ETHERNET: 2001:db8:2:2:: -> 2001:db8:1:1:1::
+    tos 0x00, flow label 0x83fa, hop limit 63, payload length 98
+01:05:17:700066: ip6-lookup
+  fib 0 dpo-idx 0 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:2:2:: -> 2001:db8:1:1:1::
+    tos 0x00, flow label 0x83fa, hop limit 63, payload length 98
+01:05:17:700084: sr-localsid-d
+  SR-LOCALSID:
+        Localsid: 2001:db8:1:1:1::
+        Behavior: Decapsulation with L2 xconnect
+
+01:05:17:700102: host-vpp1out-output
+  host-vpp1out flags 0x00180005
+  IP4: 62:d8:01:e9:d2:08 -> 5a:80:c1:ad:96:4e
+  ICMP: 10.10.1.2 -> 10.10.1.1
+    tos 0x00, ttl 64, length 84, checksum 0x78c1 dscp CS0 ecn NON_ECN
+    fragment id 0xebd1
+  ICMP echo_reply checksum 0x99ca id 36
+01:05:17:700110: host-vpp1out-tx
+  af_packet: hw_if_index 1 tx-queue 0
+    tpacket3_hdr:
+      status 0x1 len 108 snaplen 108 mac 0 net 0
+      sec 0x0 nsec 0x0 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+    buffer 0x940d3:
+      current data 54, length 98, buffer-pool 0, ref-count 1, trace handle 0x3
+      l2-hdr-offset 0 l3-hdr-offset 14 
+    IP4: 62:d8:01:e9:d2:08 -> 5a:80:c1:ad:96:4e
+    ICMP: 10.10.1.2 -> 10.10.1.1
+      tos 0x00, ttl 64, length 84, checksum 0x78c1 dscp CS0 ecn NON_ECN
+      fragment id 0xebd1
+    ICMP echo_reply checksum 0x99ca id 36
+
+Packet 5
+
+01:05:18:643637: af-packet-input
+  af_packet: hw_if_index 1 rx-queue 0 next-index 11
+    block 44:
+      address 0x7f68d7ec0000 version 2 seq_num 2125 pkt_num 0
+    tpacket3_hdr:
+      status 0x20000001 len 98 snaplen 98 mac 92 net 106
+      sec 0x6890717e nsec 0x2c8f215c vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+01:05:18:648023: sr-pl-rewrite-encaps-l2
+  SR-policy-rewrite: src 2001:db8:1:1:: dst 2001:db8:2:2:2::
+01:05:18:648048: ip6-lookup
+  fib 0 dpo-idx 14 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0xd2e6, hop limit 64, payload length 98
+01:05:18:648066: ip6-load-balance
+  fib 0 dpo-idx 3 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0xd2e6, hop limit 64, payload length 98
+01:05:18:648075: ip6-rewrite
+  tx_sw_if_index 2 adj-idx 3 : ipv6 via 2001::2 host-vpp1vpp2: mtu:9000 next:4 flags:[] 02fe73c
+6b2ee02fe156e52ad86dd flow hash: 0x00000000
+  00000000: 02fe73c6b2ee02fe156e52ad86dd6000d2e600628f3f20010db8000100010000
+  00000020: 00000000000020010db800020002000200000000000062d801e9d2085a80c1ad
+  00000040: 964e080045000054cdf740004001569b0a0a01010a0a0102080013c500240002
+  00000060: 7e719068000000000b680b0000000000101112131415161718191a1b
+01:05:18:648086: host-vpp1vpp2-output
+  host-vpp1vpp2 flags 0x00000005
+  IP6: 02:fe:15:6e:52:ad -> 02:fe:73:c6:b2:ee
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0xd2e6, hop limit 63, payload length 98
+01:05:18:648096: host-vpp1vpp2-tx
+  af_packet: hw_if_index 2 tx-queue 0
+    tpacket3_hdr:
+      status 0x1 len 162 snaplen 162 mac 0 net 0
+      sec 0x0 nsec 0x0 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+    buffer 0x940f8:
+      current data -54, length 152, buffer-pool 0, ref-count 1, trace handle 0x4
+    IP6: 02:fe:15:6e:52:ad -> 02:fe:73:c6:b2:ee
+    IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+      tos 0x00, flow label 0xd2e6, hop limit 63, payload length 98
+
+Packet 6
+
+01:05:18:664214: af-packet-input
+  af_packet: hw_if_index 2 rx-queue 0 next-index 4
+    block 101:
+      address 0x7f68d3650000 version 2 seq_num 1222 pkt_num 0
+    tpacket3_hdr:
+      status 0x20000001 len 152 snaplen 152 mac 92 net 106
+      sec 0x6890717e nsec 0x2d8cf7a7 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+01:05:18:668021: ethernet-input
+  IP6: 02:fe:73:c6:b2:ee -> 02:fe:15:6e:52:ad
+01:05:18:668048: ip6-input
+  IP6_ETHERNET: 2001:db8:2:2:: -> 2001:db8:1:1:1::
+    tos 0x00, flow label 0x83fa, hop limit 63, payload length 98
+01:05:18:668058: ip6-lookup
+  fib 0 dpo-idx 0 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:2:2:: -> 2001:db8:1:1:1::
+    tos 0x00, flow label 0x83fa, hop limit 63, payload length 98
+01:05:18:668076: sr-localsid-d
+  SR-LOCALSID:
+        Localsid: 2001:db8:1:1:1::
+        Behavior: Decapsulation with L2 xconnect
+
+01:05:18:668093: host-vpp1out-output
+  host-vpp1out flags 0x00180005
+  IP4: 62:d8:01:e9:d2:08 -> 5a:80:c1:ad:96:4e
+  ICMP: 10.10.1.2 -> 10.10.1.1
+    tos 0x00, ttl 64, length 84, checksum 0x77e3 dscp CS0 ecn NON_ECN
+    fragment id 0xecaf
+  ICMP echo_reply checksum 0x1bc5 id 36
+01:05:18:668101: host-vpp1out-tx
+  af_packet: hw_if_index 1 tx-queue 0
+    tpacket3_hdr:
+      status 0x1 len 108 snaplen 108 mac 0 net 0
+      sec 0x0 nsec 0x0 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+    buffer 0x9411d:
+      current data 54, length 98, buffer-pool 0, ref-count 1, trace handle 0x5
+      l2-hdr-offset 0 l3-hdr-offset 14 
+    IP4: 62:d8:01:e9:d2:08 -> 5a:80:c1:ad:96:4e
+    ICMP: 10.10.1.2 -> 10.10.1.1
+      tos 0x00, ttl 64, length 84, checksum 0x77e3 dscp CS0 ecn NON_ECN
+      fragment id 0xecaf
+    ICMP echo_reply checksum 0x1bc5 id 36
+
+Packet 7
+
+01:05:19:647098: af-packet-input
+  af_packet: hw_if_index 1 rx-queue 0 next-index 11
+    block 45:
+      address 0x7f68d7ed0000 version 2 seq_num 2126 pkt_num 0
+    tpacket3_hdr:
+      status 0x20000001 len 98 snaplen 98 mac 92 net 106
+      sec 0x6890717f nsec 0x2cad8130 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+01:05:19:648058: sr-pl-rewrite-encaps-l2
+  SR-policy-rewrite: src 2001:db8:1:1:: dst 2001:db8:2:2:2::
+01:05:19:648079: ip6-lookup
+  fib 0 dpo-idx 14 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0xd2e6, hop limit 64, payload length 98
+01:05:19:648097: ip6-load-balance
+  fib 0 dpo-idx 3 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0xd2e6, hop limit 64, payload length 98
+01:05:19:648105: ip6-rewrite
+  tx_sw_if_index 2 adj-idx 3 : ipv6 via 2001::2 host-vpp1vpp2: mtu:9000 next:4 flags:[] 02fe73c
+6b2ee02fe156e52ad86dd flow hash: 0x00000000
+  00000000: 02fe73c6b2ee02fe156e52ad86dd6000d2e600628f3f20010db8000100010000
+  00000020: 00000000000020010db800020002000200000000000062d801e9d2085a80c1ad
+  00000040: 964e080045000054ce5c4000400156360a0a01010a0a0102080058bc00240003
+  00000060: 7f71906800000000c56f0b0000000000101112131415161718191a1b
+01:05:19:648116: host-vpp1vpp2-output
+  host-vpp1vpp2 flags 0x00000005
+  IP6: 02:fe:15:6e:52:ad -> 02:fe:73:c6:b2:ee
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0xd2e6, hop limit 63, payload length 98
+01:05:19:648127: host-vpp1vpp2-tx
+  af_packet: hw_if_index 2 tx-queue 0
+    tpacket3_hdr:
+      status 0x1 len 162 snaplen 162 mac 0 net 0
+      sec 0x0 nsec 0x0 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+    buffer 0x94142:
+      current data -54, length 152, buffer-pool 0, ref-count 1, trace handle 0x6
+    IP6: 02:fe:15:6e:52:ad -> 02:fe:73:c6:b2:ee
+    IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+      tos 0x00, flow label 0xd2e6, hop limit 63, payload length 98
+
+Packet 8
+
+01:05:19:667984: af-packet-input
+  af_packet: hw_if_index 2 rx-queue 0 next-index 4
+    block 102:
+      address 0x7f68d3660000 version 2 seq_num 1223 pkt_num 0
+    tpacket3_hdr:
+      status 0x20000001 len 152 snaplen 152 mac 92 net 106
+      sec 0x6890717f nsec 0x2e0679f7 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+01:05:19:676102: ethernet-input
+  IP6: 02:fe:73:c6:b2:ee -> 02:fe:15:6e:52:ad
+01:05:19:676139: ip6-input
+  IP6_ETHERNET: 2001:db8:2:2:: -> 2001:db8:1:1:1::
+    tos 0x00, flow label 0x83fa, hop limit 63, payload length 98
+01:05:19:676149: ip6-lookup
+  fib 0 dpo-idx 0 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:2:2:: -> 2001:db8:1:1:1::
+    tos 0x00, flow label 0x83fa, hop limit 63, payload length 98
+01:05:19:676168: sr-localsid-d
+  SR-LOCALSID:
+        Localsid: 2001:db8:1:1:1::
+        Behavior: Decapsulation with L2 xconnect
+
+01:05:19:676186: host-vpp1out-output
+  host-vpp1out flags 0x00180005
+  IP4: 62:d8:01:e9:d2:08 -> 5a:80:c1:ad:96:4e
+  ICMP: 10.10.1.2 -> 10.10.1.1
+    tos 0x00, ttl 64, length 84, checksum 0x77df dscp CS0 ecn NON_ECN
+    fragment id 0xecb3
+  ICMP echo_reply checksum 0x60bc id 36
+01:05:19:676195: host-vpp1out-tx
+  af_packet: hw_if_index 1 tx-queue 0
+    tpacket3_hdr:
+      status 0x1 len 108 snaplen 108 mac 0 net 0
+      sec 0x0 nsec 0x0 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+    buffer 0x94167:
+      current data 54, length 98, buffer-pool 0, ref-count 1, trace handle 0x7
+      l2-hdr-offset 0 l3-hdr-offset 14 
+    IP4: 62:d8:01:e9:d2:08 -> 5a:80:c1:ad:96:4e
+    ICMP: 10.10.1.2 -> 10.10.1.1
+      tos 0x00, ttl 64, length 84, checksum 0x77df dscp CS0 ecn NON_ECN
+      fragment id 0xecb3
+    ICMP echo_reply checksum 0x60bc id 36
+
+Packet 9
+
+01:05:22:862562: af-packet-input
+  af_packet: hw_if_index 2 rx-queue 0 next-index 4
+    block 103:
+      address 0x7f68d3670000 version 2 seq_num 1224 pkt_num 0
+    tpacket3_hdr:
+      status 0x20000001 len 96 snaplen 96 mac 92 net 106
+      sec 0x68907182 nsec 0x39779485 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+01:05:22:868070: ethernet-input
+  IP6: 02:fe:73:c6:b2:ee -> 02:fe:15:6e:52:ad
+01:05:22:868098: ip6-input
+  IP6_ETHERNET: 2001:db8:2:2:: -> 2001:db8:1:1:1::
+    tos 0x00, flow label 0x6d40, hop limit 63, payload length 42
+01:05:22:868107: ip6-lookup
+  fib 0 dpo-idx 0 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:2:2:: -> 2001:db8:1:1:1::
+    tos 0x00, flow label 0x6d40, hop limit 63, payload length 42
+01:05:22:868124: sr-localsid-d
+  SR-LOCALSID:
+        Localsid: 2001:db8:1:1:1::
+        Behavior: Decapsulation with L2 xconnect
+
+01:05:22:868141: host-vpp1out-output
+  host-vpp1out flags 0x00180005
+  ARP: 62:d8:01:e9:d2:08 -> 5a:80:c1:ad:96:4e
+  request, type ethernet/IP4, address size 6/4
+  62:d8:01:e9:d2:08/10.10.1.2 -> 00:00:00:00:00:00/10.10.1.1
+01:05:22:868150: host-vpp1out-tx
+  af_packet: hw_if_index 1 tx-queue 0
+    tpacket3_hdr:
+      status 0x1 len 52 snaplen 52 mac 0 net 0
+      sec 0x0 nsec 0x0 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+    buffer 0x9418c:
+      current data 54, length 42, buffer-pool 0, ref-count 1, trace handle 0x8
+      l2-hdr-offset 0 l3-hdr-offset 14 
+    ARP: 62:d8:01:e9:d2:08 -> 5a:80:c1:ad:96:4e
+    request, type ethernet/IP4, address size 6/4
+    62:d8:01:e9:d2:08/10.10.1.2 -> 00:00:00:00:00:00/10.10.1.1
+
+Packet 10
+
+01:05:22:868349: af-packet-input
+  af_packet: hw_if_index 1 rx-queue 0 next-index 11
+    block 46:
+      address 0x7f68d7ee0000 version 2 seq_num 2127 pkt_num 0
+    tpacket3_hdr:
+      status 0x20000001 len 42 snaplen 42 mac 92 net 106
+      sec 0x68907182 nsec 0x39f4206f vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+01:05:22:871998: sr-pl-rewrite-encaps-l2
+  SR-policy-rewrite: src 2001:db8:1:1:: dst 2001:db8:2:2:2::
+01:05:22:872033: ip6-lookup
+  fib 0 dpo-idx 14 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0x8738, hop limit 64, payload length 42
+01:05:22:872051: ip6-load-balance
+  fib 0 dpo-idx 3 flow hash: 0x00000000
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0x8738, hop limit 64, payload length 42
+01:05:22:872059: ip6-rewrite
+  tx_sw_if_index 2 adj-idx 3 : ipv6 via 2001::2 host-vpp1vpp2: mtu:9000 next:4 flags:[] 02fe73c
+6b2ee02fe156e52ad86dd flow hash: 0x00000000
+  00000000: 02fe73c6b2ee02fe156e52ad86dd60008738002a8f3f20010db8000100010000
+  00000020: 00000000000020010db800020002000200000000000062d801e9d2085a80c1ad
+  00000040: 964e080600010800060400025a80c1ad964e0a0a010162d801e9d2080a0a0102
+  00000060: cf679068000000005224040000000000101112131415161718191a1b
+01:05:22:872070: host-vpp1vpp2-output
+  host-vpp1vpp2 flags 0x00000005
+  IP6: 02:fe:15:6e:52:ad -> 02:fe:73:c6:b2:ee
+  IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+    tos 0x00, flow label 0x8738, hop limit 63, payload length 42
+01:05:22:872080: host-vpp1vpp2-tx
+  af_packet: hw_if_index 2 tx-queue 0
+    tpacket3_hdr:
+      status 0x1 len 106 snaplen 106 mac 0 net 0
+      sec 0x0 nsec 0x0 vlan 0 vlan_tpid 0
+    vnet-hdr:
+      flags 0x00 gso_type 0x00 hdr_len 0
+      gso_size 0 csum_start 0 csum_offset 0
+    buffer 0x941b1:
+      current data -54, length 96, buffer-pool 0, ref-count 1, trace handle 0x9
+    IP6: 02:fe:15:6e:52:ad -> 02:fe:73:c6:b2:ee
+    IP6_ETHERNET: 2001:db8:1:1:: -> 2001:db8:2:2:2::
+      tos 0x00, flow label 0x8738, hop limit 63, payload length 42
+
+DBGvpp# 
